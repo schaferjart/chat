@@ -34,6 +34,7 @@
             background: black;
             image-rendering: pixelated;
             z-index: 1;
+            pointer-events: none; /* Allow clicks to pass through to links */
         }
         
         .company-info {
@@ -43,10 +44,14 @@
             transform: translate(-50%, -50%);
             z-index: 10;
             text-align: center;
-            pointer-events: auto;
+            pointer-events: none; /* Allow clicks to pass through to child elements */
             font-weight: bold;
             letter-spacing: 0.02em;
             line-height: 1.5;
+        }
+        
+        .company-info > * {
+            pointer-events: auto; /* Re-enable pointer events for child elements */
         }
         
         .company-name {
@@ -55,12 +60,15 @@
             margin-bottom: 0.6em;
             text-transform: lowercase;
             color: rgb(255, 255, 255);
-            transition: color 0.2s;
             cursor: default;
         }
         
-        .company-name:hover {
-            color: rgb(0, 0, 0);
+        .company-name > div {
+            pointer-events: none;
+        }
+        
+        .company-name > div > span {
+            pointer-events: auto;
         }
         
         .company-tagline {
@@ -178,12 +186,50 @@
             margin: 0 0.3em;
         }
         
-        #textureNameInline {
-            cursor: pointer;
-            transition: color 0.2s;
+        .style-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            pointer-events: auto;
         }
         
-        #textureNameInline:hover {
+        .style-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 5px 10px;
+            color: rgb(255, 255, 255);
+            font-family: monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            text-transform: lowercase;
+        }
+        
+        .style-btn:hover {
+            color: rgb(0, 0, 0);
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .style-btn.active {
+            color: rgb(0, 0, 0);
+            background: rgba(255, 255, 255, 1);
+            border-color: rgba(255, 255, 255, 1);
+        }
+        
+        #textureNameInline, #visualStyleName {
+            cursor: pointer;
+            transition: color 0.2s;
+            pointer-events: auto;
+            display: inline-block;
+        }
+        
+        #textureNameInline:hover, #visualStyleName:hover {
             color: rgb(0, 0, 0);
         }
     </style>
@@ -192,8 +238,11 @@
     <canvas id="canvas"></canvas>
     
     <div class="company-info">
-        <div class="company-name"><span id="textureNameInline"></span> by</div>
-        <div class="company-email"><a href="mailto:waddup@baufer.yachts">waddup@baufer.yachts</a></div>
+        <div class="company-name">
+            <div><span id="visualStyleName" style="cursor: pointer;">ascii</span> on</div>
+            <div><span id="textureNameInline" style="cursor: pointer;">waves</span> by</div>
+        </div>
+        <div class="company-email"><a href="mailto:waddup@baufer.yachts" target="_self" rel="noopener">waddup@baufer.yachts</a></div>
         <div class="company-address">
             <a href="https://maps.app.goo.gl/qSLz97McKEbr8W7n7" target="_blank" rel="noopener noreferrer">
                 Mythenquai 345<br>
@@ -244,9 +293,13 @@
         
         const W = () => canvas.width;
         const H = () => canvas.height;
-        const chars = ['@','#','%','*','+','=','-','.',':',' '];
         const loopFrames = 1800;
         let t = 0;
+        
+        // Visual style types
+        const visualStyles = ['ascii', 'metallic', 'fabric', 'glossy', 'matte'];
+        let selectedVisualStyle = visualStyles[Math.floor(Math.random() * visualStyles.length)];
+        const chars = ['@','#','%','*','+','=','-','.',':',' '];
 
         let params = {
             param1: 2.0,
@@ -482,17 +535,144 @@
             });
         }
         
-        // Add click event to texture name in the middle
-        document.getElementById('textureNameInline').addEventListener('click', selectRandomTexture);
+        // Function to randomly select a visual style
+        function selectRandomVisualStyle() {
+            // Get a different visual style than the current one
+            let newStyle;
+            do {
+                newStyle = visualStyles[Math.floor(Math.random() * visualStyles.length)];
+            } while (newStyle === selectedVisualStyle && visualStyles.length > 1);
+            
+            selectedVisualStyle = newStyle;
+            document.getElementById('visualStyleName').textContent = selectedVisualStyle;
+        }
+        
+        // Add click event to visual style name
+        document.getElementById('visualStyleName').addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectRandomVisualStyle();
+        });
+        
+        // Add click event to texture name
+        document.getElementById('textureNameInline').addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectRandomTexture();
+        });
+        
+        // Initialize display
+        document.getElementById('visualStyleName').textContent = selectedVisualStyle;
+        
+        // Ensure mailto link works properly
+        const emailLink = document.querySelector('a[href^="mailto:"]');
+        if (emailLink) {
+            emailLink.addEventListener('click', function(e) {
+                // Ensure the mailto link opens properly
+                const href = this.getAttribute('href');
+                if (href && href.startsWith('mailto:')) {
+                    window.location.href = href;
+                }
+            });
+        }
 
+        function drawMetallicCell(ctx, x, y, size, value, hue) {
+            const light = 40 + value * 60;
+            const shine = Math.sin(value * Math.PI * 4) * 0.3 + 0.7;
+            
+            // Base metallic color with gradient
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 0.7);
+            gradient.addColorStop(0, `hsl(${hue}, 80%, ${Math.min(100, light + 20)}%)`);
+            gradient.addColorStop(0.5, `hsl(${hue}, 100%, ${light}%)`);
+            gradient.addColorStop(1, `hsl(${hue}, 70%, ${Math.max(20, light - 30)}%)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shine highlight
+            if (shine > 0.5) {
+                ctx.fillStyle = `hsla(${hue}, 100%, 100%, ${shine * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(x - size * 0.15, y - size * 0.15, size * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawFabricCell(ctx, x, y, size, value, hue) {
+            const light = 45 + value * 55;
+            const pattern = hash(x * 0.1, y * 0.1, 0) * 0.3;
+            
+            // Woven fabric pattern
+            ctx.fillStyle = `hsl(${hue}, 85%, ${light}%)`;
+            ctx.fillRect(x - size * 0.5, y - size * 0.5, size, size);
+            
+            // Woven texture lines
+            ctx.strokeStyle = `hsla(${hue}, 100%, ${light - 15}%, 0.3)`;
+            ctx.lineWidth = 0.5;
+            
+            // Horizontal weave
+            for (let i = -1; i <= 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x - size * 0.5, y + i * size * 0.3);
+                ctx.lineTo(x + size * 0.5, y + i * size * 0.3 + pattern * size);
+                ctx.stroke();
+            }
+            
+            // Vertical weave
+            for (let i = -1; i <= 1; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x + i * size * 0.3, y - size * 0.5);
+                ctx.lineTo(x + i * size * 0.3 + pattern * size, y + size * 0.5);
+                ctx.stroke();
+            }
+        }
+        
+        function drawGlossyCell(ctx, x, y, size, value, hue) {
+            const light = 50 + value * 50;
+            
+            // Glossy sphere effect
+            const gradient = ctx.createRadialGradient(
+                x - size * 0.2, y - size * 0.2, 0,
+                x, y, size * 0.6
+            );
+            gradient.addColorStop(0, `hsla(${hue}, 100%, 95%, 0.9)`);
+            gradient.addColorStop(0.3, `hsl(${hue}, 100%, ${light + 10}%)`);
+            gradient.addColorStop(0.7, `hsl(${hue}, 100%, ${light}%)`);
+            gradient.addColorStop(1, `hsl(${hue}, 100%, ${Math.max(30, light - 20)}%)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawMatteCell(ctx, x, y, size, value, hue) {
+            const light = 40 + value * 60;
+            const noise = hash(x * 0.05, y * 0.05, 0) * 0.2;
+            
+            // Matte texture with noise
+            ctx.fillStyle = `hsl(${hue}, 70%, ${light + noise * 20}%)`;
+            ctx.fillRect(x - size * 0.5, y - size * 0.5, size, size);
+            
+            // Subtle texture dots
+            const dots = Math.floor(value * 3) + 1;
+            for (let i = 0; i < dots; i++) {
+                const dotX = x + (hash(x + i, y, 0) - 0.5) * size * 0.6;
+                const dotY = y + (hash(y + i, x, 0) - 0.5) * size * 0.6;
+                ctx.fillStyle = `hsla(${hue}, 100%, ${light + noise * 30}%, 0.3)`;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, size * 0.1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
         function drawFrame(frame) {
             ctx.clearRect(0, 0, W(), H());
             const time = (frame / loopFrames) * Math.PI * 2 * params.speed;
             
-            const charW = 9;
-            const charH = 9;
-            const cols = Math.ceil(W() / charW);
-            const rows = Math.ceil(H() / charH);
+            const cellSize = 9;
+            const cols = Math.ceil(W() / cellSize);
+            const rows = Math.ceil(H() / cellSize);
             
             const offsetX = Math.cos(time) * 5;
             const offsetY = Math.sin(time) * 5;
@@ -509,15 +689,34 @@
                     value = (value - 0.5) * params.contrast + 0.5;
                     value = Math.max(0, Math.min(1, value));
                     
-                    const charIndex = Math.floor(value * (chars.length - 1));
-                    const ch = chars[charIndex];
-                    
                     const colorIndex = Math.floor(value * palette.length) % palette.length;
                     const hue = getHue(palette[colorIndex]);
-                    const light = 50 + value * 50; // Increased from 30-80% to 50-100% for more pop
                     
-                    ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
-                    ctx.fillText(ch, col * charW, row * charH);
+                    const pixelX = col * cellSize + cellSize * 0.5;
+                    const pixelY = row * cellSize + cellSize * 0.5;
+                    
+                    // Draw based on selected visual style
+                    switch(selectedVisualStyle) {
+                        case 'ascii':
+                            const charIndex = Math.floor(value * (chars.length - 1));
+                            const ch = chars[charIndex];
+                            const light = 50 + value * 50;
+                            ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+                            ctx.fillText(ch, col * cellSize, row * cellSize);
+                            break;
+                        case 'metallic':
+                            drawMetallicCell(ctx, pixelX, pixelY, cellSize, value, hue);
+                            break;
+                        case 'fabric':
+                            drawFabricCell(ctx, pixelX, pixelY, cellSize, value, hue);
+                            break;
+                        case 'glossy':
+                            drawGlossyCell(ctx, pixelX, pixelY, cellSize, value, hue);
+                            break;
+                        case 'matte':
+                            drawMatteCell(ctx, pixelX, pixelY, cellSize, value, hue);
+                            break;
+                    }
                 }
             }
         }
