@@ -178,21 +178,12 @@
             margin: 0 0.3em;
         }
         
-        .texture-name {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 15;
-            font-family: monospace;
-            font-size: 9px;
-            color: rgb(255, 255, 255);
-            pointer-events: auto;
-            transition: color 0.2s;
+        #textureNameInline {
             cursor: pointer;
+            transition: color 0.2s;
         }
         
-        .texture-name:hover {
+        #textureNameInline:hover {
             color: rgb(0, 0, 0);
         }
     </style>
@@ -202,7 +193,6 @@
     
     <div class="company-info">
         <div class="company-name"><span id="textureNameInline"></span> by</div>
-        <div class="company-tagline">baufer</div>
         <div class="company-email"><a href="mailto:waddup@baufer.yachts">waddup@baufer.yachts</a></div>
         <div class="company-address">
             <a href="https://maps.app.goo.gl/qSLz97McKEbr8W7n7" target="_blank" rel="noopener noreferrer">
@@ -213,8 +203,6 @@
         </div>
     </div>
     
-    <div class="texture-name" id="textureName"></div>
-    
     <div class="controls" id="controls-container">
         <button class="control-btn" data-param="param1" data-min="0.5" data-max="5" data-start="2" data-step="0.1">
             <span class="label">param1</span><span class="separator">|</span><span class="value">2.0</span>
@@ -224,8 +212,8 @@
             <span class="label">param2</span><span class="separator">|</span><span class="value">4</span>
         </button>
         
-        <button class="control-btn" data-param="param3" data-min="0.5" data-max="4" data-start="2" data-step="0.1">
-            <span class="label">param3</span><span class="separator">|</span><span class="value">2.0</span>
+        <button class="control-btn" data-param="param3" data-min="0.2" data-max="1" data-start="0.6" data-step="0.05">
+            <span class="label">param3</span><span class="separator">|</span><span class="value">0.6</span>
         </button>
         
         <button class="control-btn" data-param="param4" data-min="0.1" data-max="1" data-start="0.5" data-step="0.05">
@@ -263,13 +251,13 @@
         let params = {
             param1: 2.0,
             param2: 4,
-            param3: 2.0,
+            param3: 0.6,
             param4: 0.5,
             speed: 0.3,
             contrast: 1.5
         };
         
-        const palette = ['#FF4C4C', '#4CFFDB', '#FFD14C', '#4C6BFF'];
+        const palette = ['#FF6B35', '#FF8C42', '#FFB347', '#FF6B9D']; // Warm palette: coral, orange, amber, warm pink
 
         // Hash function
         function hash(x, y, z) {
@@ -473,7 +461,6 @@
         ];
 
         let selectedTexture = textures[Math.floor(Math.random() * textures.length)];
-        document.getElementById('textureName').textContent = selectedTexture.name;
         document.getElementById('textureNameInline').textContent = selectedTexture.name;
         
         function selectRandomTexture() {
@@ -484,7 +471,6 @@
             } while (newTexture.name === selectedTexture.name && textures.length > 1);
             
             selectedTexture = newTexture;
-            document.getElementById('textureName').textContent = selectedTexture.name;
             document.getElementById('textureNameInline').textContent = selectedTexture.name;
             
             // Update control button labels
@@ -496,8 +482,8 @@
             });
         }
         
-        // Add click event to texture name
-        document.getElementById('textureName').addEventListener('click', selectRandomTexture);
+        // Add click event to texture name in the middle
+        document.getElementById('textureNameInline').addEventListener('click', selectRandomTexture);
 
         function drawFrame(frame) {
             ctx.clearRect(0, 0, W(), H());
@@ -528,7 +514,7 @@
                     
                     const colorIndex = Math.floor(value * palette.length) % palette.length;
                     const hue = getHue(palette[colorIndex]);
-                    const light = 30 + value * 50;
+                    const light = 50 + value * 50; // Increased from 30-80% to 50-100% for more pop
                     
                     ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
                     ctx.fillText(ch, col * charW, row * charH);
