@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>baufer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            image-rendering: pixelated;
+            z-index: 1;
+        }
+        
+        .company-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: auto;
+            font-weight: bold;
+            letter-spacing: 0.02em;
+            line-height: 1.5;
+        }
+        
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 0.6em;
+            text-transform: lowercase;
+            color: rgb(255, 255, 255);
+            transition: color 0.2s;
+            cursor: default;
+        }
+        
+        .company-name:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .company-tagline {
+            font-size: 18px;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            margin-bottom: 0.6em;
+            transition: color 0.2s;
+            cursor: default;
+        }
+        
+        .company-tagline:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .company-email {
+            font-size: 18px;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            margin-bottom: 0.6em;
+        }
+        
+        .company-email a {
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+            pointer-events: auto;
+            transition: color 0.2s;
+        }
+        
+        .company-email a:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .company-address {
+            font-size: 18px;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            line-height: 1.5;
+        }
+        
+        .company-address a {
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+            pointer-events: auto;
+            transition: color 0.2s;
+        }
+        
+        .company-address a:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .controls {
+            position: fixed;
+            z-index: 5;
+        }
+        
+        .controls.top-left {
+            top: 20px;
+            left: 20px;
+        }
+        
+        .controls.top-center {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .controls.top-right {
+            top: 20px;
+            right: 20px;
+        }
+        
+        .controls.bottom-left {
+            bottom: 20px;
+            left: 20px;
+        }
+        
+        .controls.bottom-center {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .controls.bottom-right {
+            bottom: 20px;
+            right: 20px;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: rgb(255, 255, 255);
+            font-family: monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        
+        .control-btn:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .control-btn .label {
+            display: inline;
+        }
+        
+        .control-btn .value {
+            display: inline;
+        }
+        
+        .control-btn .separator {
+            display: inline;
+            margin: 0 0.3em;
+        }
+        
+        .texture-name {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 15;
+            font-family: monospace;
+            font-size: 9px;
+            color: rgb(255, 255, 255);
+            pointer-events: auto;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        
+        .texture-name:hover {
+            color: rgb(0, 0, 0);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="company-info">
+        <div class="company-name"><span id="textureNameInline"></span> by</div>
+        <div class="company-tagline">baufer</div>
+        <div class="company-email"><a href="mailto:waddup@baufer.yachts">waddup@baufer.yachts</a></div>
+        <div class="company-address">
+            <a href="https://maps.app.goo.gl/qSLz97McKEbr8W7n7" target="_blank" rel="noopener noreferrer">
+                Mythenquai 345<br>
+                8038 Zürich<br>
+                CH-Switzerland
+            </a>
+        </div>
+    </div>
+    
+    <div class="texture-name" id="textureName"></div>
+    
+    <div class="controls" id="controls-container">
+        <button class="control-btn" data-param="param1" data-min="0.5" data-max="5" data-start="2" data-step="0.1">
+            <span class="label">param1</span><span class="separator">|</span><span class="value">2.0</span>
+        </button>
+        
+        <button class="control-btn" data-param="param2" data-min="1" data-max="8" data-start="4">
+            <span class="label">param2</span><span class="separator">|</span><span class="value">4</span>
+        </button>
+        
+        <button class="control-btn" data-param="param3" data-min="0.5" data-max="4" data-start="2" data-step="0.1">
+            <span class="label">param3</span><span class="separator">|</span><span class="value">2.0</span>
+        </button>
+        
+        <button class="control-btn" data-param="param4" data-min="0.1" data-max="1" data-start="0.5" data-step="0.05">
+            <span class="label">param4</span><span class="separator">|</span><span class="value">0.5</span>
+        </button>
+        
+        <button class="control-btn" data-param="speed" data-min="0.05" data-max="2" data-start="0.3" data-step="0.05">
+            <span class="label">speed</span><span class="separator">|</span><span class="value">0.3</span>
+        </button>
+        
+        <button class="control-btn" data-param="contrast" data-min="0.5" data-max="3" data-start="1.5" data-step="0.1">
+            <span class="label">contrast</span><span class="separator">|</span><span class="value">1.5</span>
+        </button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.font = "9px monospace";
+            ctx.textBaseline = "top";
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        const W = () => canvas.width;
+        const H = () => canvas.height;
+        const chars = ['@','#','%','*','+','=','-','.',':',' '];
+        const loopFrames = 1800;
+        let t = 0;
+
+        let params = {
+            param1: 2.0,
+            param2: 4,
+            param3: 2.0,
+            param4: 0.5,
+            speed: 0.3,
+            contrast: 1.5
+        };
+        
+        const palette = ['#FF4C4C', '#4CFFDB', '#FFD14C', '#4C6BFF'];
+
+        // Hash function
+        function hash(x, y, z) {
+            let h = ((x * 374761393) + (y * 668265263) + (z * 1274126177)) | 0;
+            h = (h ^ (h >>> 13)) * 1274126177;
+            return (h ^ (h >>> 16)) / 2147483648.0;
+        }
+
+        // 3D noise
+        function noise3D(x, y, z) {
+            const xi = Math.floor(x);
+            const yi = Math.floor(y);
+            const zi = Math.floor(z);
+            const xf = x - xi;
+            const yf = y - yi;
+            const zf = z - zi;
+            
+            const u = xf * xf * (3 - 2 * xf);
+            const v = yf * yf * (3 - 2 * yf);
+            const w = zf * zf * (3 - 2 * zf);
+            
+            const n000 = hash(xi, yi, zi);
+            const n100 = hash(xi + 1, yi, zi);
+            const n010 = hash(xi, yi + 1, zi);
+            const n110 = hash(xi + 1, yi + 1, zi);
+            const n001 = hash(xi, yi, zi + 1);
+            const n101 = hash(xi + 1, yi, zi + 1);
+            const n011 = hash(xi, yi + 1, zi + 1);
+            const n111 = hash(xi + 1, yi + 1, zi + 1);
+            
+            const nx00 = n000 * (1 - u) + n100 * u;
+            const nx10 = n010 * (1 - u) + n110 * u;
+            const nx01 = n001 * (1 - u) + n101 * u;
+            const nx11 = n011 * (1 - u) + n111 * u;
+            
+            const nxy0 = nx00 * (1 - v) + nx10 * v;
+            const nxy1 = nx01 * (1 - v) + nx11 * v;
+            
+            return nxy0 * (1 - w) + nxy1 * w;
+        }
+
+        // TEXTURE GENERATORS
+        
+        // 1. Musgrave fBm
+        function musgraveTexture(x, y, z) {
+            let value = 0;
+            let amplitude = 1;
+            let frequency = params.param1;
+            const octaves = params.param2;
+            const lacunarity = params.param3;
+            const gain = params.param4;
+            
+            for (let i = 0; i < octaves; i++) {
+                value += amplitude * noise3D(x * frequency, y * frequency, z * frequency);
+                frequency *= lacunarity;
+                amplitude *= gain;
+            }
+            return value;
+        }
+
+        // 2. Voronoi/Worley Noise
+        function voronoiTexture(x, y, z) {
+            const scale = params.param1;
+            const xi = Math.floor(x * scale);
+            const yi = Math.floor(y * scale);
+            const zi = Math.floor(z * scale);
+            
+            let minDist = 10;
+            
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dz = -1; dz <= 1; dz++) {
+                        const cellX = xi + dx;
+                        const cellY = yi + dy;
+                        const cellZ = zi + dz;
+                        
+                        const px = cellX + hash(cellX, cellY, cellZ);
+                        const py = cellY + hash(cellY, cellZ, cellX);
+                        const pz = cellZ + hash(cellZ, cellX, cellY);
+                        
+                        const dist = Math.sqrt(
+                            (x * scale - px) ** 2 +
+                            (y * scale - py) ** 2 +
+                            (z * scale - pz) ** 2
+                        );
+                        
+                        minDist = Math.min(minDist, dist);
+                    }
+                }
+            }
+            
+            return 1 - Math.min(1, minDist * params.param3);
+        }
+
+        // 3. Ridged Multifractal
+        function ridgedTexture(x, y, z) {
+            let value = 0;
+            let amplitude = 1;
+            let frequency = params.param1;
+            const octaves = params.param2;
+            
+            for (let i = 0; i < octaves; i++) {
+                let n = noise3D(x * frequency, y * frequency, z * frequency);
+                // Normalize noise from [-1, 1] to [0, 1]
+                n = (n + 1) / 2;
+                // Ridge transformation
+                n = 1 - Math.abs(n * 2 - 1);
+                n = n ** params.param4; // Sharpness
+                value += n * amplitude;
+                frequency *= params.param3;
+                amplitude *= 0.5;
+            }
+            
+            return value / octaves;
+        }
+
+        // 4. Domain Warped
+        function domainWarpTexture(x, y, z) {
+            const warpAmount = params.param4 * 5;
+            const wx = x + noise3D(x * params.param1, y * params.param1, z) * warpAmount;
+            const wy = y + noise3D(y * params.param1, z, x * params.param1) * warpAmount;
+            const wz = z + noise3D(z, x * params.param1, y * params.param1) * warpAmount;
+            
+            let value = 0;
+            let amplitude = 1;
+            let frequency = params.param3;
+            
+            for (let i = 0; i < params.param2; i++) {
+                value += amplitude * noise3D(wx * frequency, wy * frequency, wz * frequency);
+                frequency *= 2;
+                amplitude *= 0.5;
+            }
+            
+            return value;
+        }
+
+        // 5. Turbulence
+        function turbulenceTexture(x, y, z) {
+            let value = 0;
+            let amplitude = 1;
+            let frequency = params.param1;
+            const octaves = params.param2;
+            
+            for (let i = 0; i < octaves; i++) {
+                value += amplitude * Math.abs(noise3D(x * frequency, y * frequency, z * frequency) * 2 - 1);
+                frequency *= params.param3;
+                amplitude *= 0.5;
+            }
+            
+            return value;
+        }
+
+        // 6. Marble
+        function marbleTexture(x, y, z) {
+            const turbulence = turbulenceTexture(x, y, z) * params.param4;
+            const value = Math.sin((x * params.param1 + turbulence * 10) * Math.PI);
+            return (value + 1) / 2;
+        }
+
+        // 7. Wave Interference
+        function waveTexture(x, y, z) {
+            const freq1 = params.param1;
+            const freq2 = params.param1 * params.param3;
+            const w1 = Math.sin(x * freq1 + z * 2) * Math.sin(y * freq1 + z * 2);
+            const w2 = Math.sin(x * freq2 - z) * Math.sin(y * freq2 - z);
+            return (w1 + w2 * params.param4) / 2 + 0.5;
+        }
+
+        // 8. Metaballs
+        function metaballTexture(x, y, z) {
+            const numBalls = Math.floor(params.param2);
+            let sum = 0;
+            
+            for (let i = 0; i < numBalls; i++) {
+                const phase = z + i * 2.5;
+                const bx = Math.sin(phase * params.param1 + i) * 5;
+                const by = Math.cos(phase * params.param1 + i * 0.7) * 5;
+                const bz = Math.sin(phase * 0.5 + i * 1.3) * 2;
+                
+                const dx = x - bx;
+                const dy = y - by;
+                const dz = (z % 10) - 5 - bz;
+                
+                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                sum += params.param4 * 3 / (dist + 0.1);
+            }
+            
+            return Math.min(1, sum);
+        }
+
+        // Random texture selection
+        const textures = [
+            { name: 'musgrave', fn: musgraveTexture, labels: ['scale', 'octaves', 'lacunarity', 'gain'] },
+            { name: 'voronoi', fn: voronoiTexture, labels: ['scale', 'cells', 'sharpness', 'blend'] },
+            { name: 'ridged', fn: ridgedTexture, labels: ['scale', 'octaves', 'lacunarity', 'sharpness'] },
+            { name: 'warp', fn: domainWarpTexture, labels: ['frequency', 'octaves', 'detail', 'warp'] },
+            { name: 'turbulence', fn: turbulenceTexture, labels: ['scale', 'octaves', 'lacunarity', 'intensity'] },
+            { name: 'marble', fn: marbleTexture, labels: ['frequency', 'octaves', 'lacunarity', 'turbulence'] },
+            { name: 'waves', fn: waveTexture, labels: ['frequency', 'complexity', 'harmonic', 'amplitude'] },
+            { name: 'metaballs', fn: metaballTexture, labels: ['speed', 'count', 'scale', 'radius'] }
+        ];
+
+        let selectedTexture = textures[Math.floor(Math.random() * textures.length)];
+        document.getElementById('textureName').textContent = selectedTexture.name;
+        document.getElementById('textureNameInline').textContent = selectedTexture.name;
+        
+        function selectRandomTexture() {
+            // Get a different texture than the current one
+            let newTexture;
+            do {
+                newTexture = textures[Math.floor(Math.random() * textures.length)];
+            } while (newTexture.name === selectedTexture.name && textures.length > 1);
+            
+            selectedTexture = newTexture;
+            document.getElementById('textureName').textContent = selectedTexture.name;
+            document.getElementById('textureNameInline').textContent = selectedTexture.name;
+            
+            // Update control button labels
+            const buttons = document.querySelectorAll('.control-btn');
+            buttons.forEach((btn, i) => {
+                if (i < 4) {
+                    btn.querySelector('.label').textContent = selectedTexture.labels[i];
+                }
+            });
+        }
+        
+        // Add click event to texture name
+        document.getElementById('textureName').addEventListener('click', selectRandomTexture);
+
+        function drawFrame(frame) {
+            ctx.clearRect(0, 0, W(), H());
+            const time = (frame / loopFrames) * Math.PI * 2 * params.speed;
+            
+            const charW = 9;
+            const charH = 9;
+            const cols = Math.ceil(W() / charW);
+            const rows = Math.ceil(H() / charH);
+            
+            const offsetX = Math.cos(time) * 5;
+            const offsetY = Math.sin(time) * 5;
+            const offsetZ = time * 0.5;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = col / cols * 10 + offsetX;
+                    const y = row / rows * 10 + offsetY;
+                    const z = offsetZ;
+                    
+                    let value = selectedTexture.fn(x, y, z);
+                    
+                    value = (value - 0.5) * params.contrast + 0.5;
+                    value = Math.max(0, Math.min(1, value));
+                    
+                    const charIndex = Math.floor(value * (chars.length - 1));
+                    const ch = chars[charIndex];
+                    
+                    const colorIndex = Math.floor(value * palette.length) % palette.length;
+                    const hue = getHue(palette[colorIndex]);
+                    const light = 30 + value * 50;
+                    
+                    ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+                    ctx.fillText(ch, col * charW, row * charH);
+                }
+            }
+        }
+
+        function getHue(hex) {
+            const r = parseInt(hex.substr(1, 2), 16) / 255;
+            const g = parseInt(hex.substr(3, 2), 16) / 255;
+            const b = parseInt(hex.substr(5, 2), 16) / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h = 0;
+            if (max === min) h = 0;
+            else if (max === r) h = (60 * ((g - b) / (max - min)) + 360) % 360;
+            else if (max === g) h = (60 * ((b - r) / (max - min)) + 120) % 360;
+            else h = (60 * ((r - g) / (max - min)) + 240) % 360;
+            return h;
+        }
+
+        let pressInterval = null;
+        let pressStartTime = 0;
+        
+        function setupControls() {
+            const buttons = document.querySelectorAll('.control-btn');
+            const container = document.getElementById('controls-container');
+            
+            const positions = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
+            
+            buttons.forEach((btn, i) => {
+                // Update labels based on selected texture
+                if (i < 4) {
+                    btn.querySelector('.label').textContent = selectedTexture.labels[i];
+                }
+                
+                const newContainer = document.createElement('div');
+                newContainer.className = 'controls ' + positions[i];
+                newContainer.appendChild(btn);
+                document.body.appendChild(newContainer);
+            });
+            
+            container.remove();
+            
+            buttons.forEach(btn => {
+                const param = btn.dataset.param;
+                const min = parseFloat(btn.dataset.min);
+                const max = parseFloat(btn.dataset.max);
+                const start = parseFloat(btn.dataset.start);
+                const step = parseFloat(btn.dataset.step) || 1;
+                const valueEl = btn.querySelector('.value');
+                
+                let currentValue = start;
+                let direction = 1;
+                
+                function updateValue() {
+                    const increment = (max - min) / 100 * direction;
+                    currentValue += increment;
+                    
+                    if (currentValue >= max) {
+                        currentValue = max;
+                        direction = -1;
+                    } else if (currentValue <= min) {
+                        currentValue = min;
+                        direction = 1;
+                    }
+                    
+                    let displayValue = currentValue;
+                    if (step < 1) {
+                        displayValue = Math.round(currentValue / step) * step;
+                    } else {
+                        displayValue = Math.round(currentValue);
+                    }
+                    
+                    params[param] = displayValue;
+                    valueEl.textContent = step < 1 ? displayValue.toFixed(2) : displayValue;
+                }
+                
+                function startPress() {
+                    pressStartTime = Date.now();
+                    updateValue();
+                    
+                    pressInterval = setInterval(() => {
+                        const elapsed = Date.now() - pressStartTime;
+                        const speed = elapsed > 1000 ? 3 : elapsed > 500 ? 2 : 1;
+                        for (let i = 0; i < speed; i++) {
+                            updateValue();
+                        }
+                    }, 50);
+                }
+                
+                function stopPress() {
+                    if (pressInterval) {
+                        clearInterval(pressInterval);
+                        pressInterval = null;
+                    }
+                }
+                
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    startPress();
+                });
+                
+                btn.addEventListener('mouseup', stopPress);
+                btn.addEventListener('mouseleave', stopPress);
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    startPress();
+                });
+                
+                btn.addEventListener('touchend', stopPress);
+                btn.addEventListener('touchcancel', stopPress);
+            });
+        }
+
+        function loop() {
+            drawFrame(t);
+            t = (t + 1) % loopFrames;
+            requestAnimationFrame(loop);
+        }
+
+        setupControls();
+        loop();
+    </script>
+</body>
+</html>
