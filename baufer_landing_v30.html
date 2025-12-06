@@ -64,11 +64,20 @@
         }
         
         .company-name > div {
-            pointer-events: none;
+            pointer-events: auto;
+            transition: color 0.2s;
         }
         
         .company-name > div > span {
             pointer-events: auto;
+        }
+        
+        .company-name > div:first-child:hover {
+            color: rgb(0, 0, 0);
+        }
+        
+        .company-name > div:last-child:hover {
+            color: rgb(0, 0, 0);
         }
         
         .company-tagline {
@@ -239,8 +248,8 @@
     
     <div class="company-info">
         <div class="company-name">
-            <div><span id="visualStyleName" style="cursor: pointer;">ascii</span> on</div>
-            <div><span id="textureNameInline" style="cursor: pointer;">waves</span> by</div>
+            <div><span id="visualStyleName" style="cursor: pointer;">ascii</span> <span class="on-text">on</span></div>
+            <div><span id="textureNameInline" style="cursor: pointer;">waves</span> <span class="by-text">by</span></div>
         </div>
         <div class="company-email"><a href="mailto:waddup@baufer.yachts" target="_self" rel="noopener">waddup@baufer.yachts</a></div>
         <div class="company-address">
