@@ -171,7 +171,7 @@
             border: none;
             padding: 0;
             color: rgb(255, 255, 255);
-            font-family: monospace;
+            font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 11px;
             cursor: pointer;
             transition: color 0.2s;
@@ -211,7 +211,7 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 5px 10px;
             color: rgb(255, 255, 255);
-            font-family: monospace;
+            font-family:'Helvetica', 'Arial', sans-serif;
             font-size: 10px;
             cursor: pointer;
             transition: all 0.2s;
@@ -306,7 +306,7 @@
         let t = 0;
         
         // Visual style types
-        const visualStyles = ['ascii', 'pixel', 'glossy'];
+        const visualStyles = ['ascii', 'pixel', 'glossy', 'halftone'];
         let selectedVisualStyle = visualStyles[Math.floor(Math.random() * visualStyles.length)];
         const chars = ['@','#','%','*','+','=','-','.',':',' '];
 
@@ -737,6 +737,21 @@
             ctx.fill();
         }
         
+        function drawHalftoneCell(ctx, x, y, size, value, hue) {
+            const light = 50 + value * 50;
+            
+            // Halftone: dot size varies with value
+            // Darker values = larger dots, lighter values = smaller dots
+            const dotRadius = (size * 0.5) * value;
+            
+            if (dotRadius > 0.5) {
+                ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
         function drawFrame(frame) {
             ctx.clearRect(0, 0, W(), H());
             
@@ -780,6 +795,9 @@
                             break;
                         case 'glossy':
                             drawGlossyCell(ctx, pixelX, pixelY, cellSize, value, hue);
+                            break;
+                        case 'halftone':
+                            drawHalftoneCell(ctx, pixelX, pixelY, cellSize, value, hue);
                             break;
                     }
                 }
