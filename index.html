@@ -319,7 +319,105 @@
             contrast: 1.5
         };
         
-        const palette = ['#FF6B35', '#FF8C42', '#FFB347', '#FF6B9D']; // Warm palette: coral, orange, amber, warm pink
+        // Function to generate random color palette
+        function generateRandomPalette() {
+            const schemes = [
+                'analogous',    // Colors next to each other on color wheel
+                'complementary', // Opposite colors
+                'triadic',      // Three evenly spaced colors
+                'splitComplementary', // Base + two adjacent to complement
+                'monochromatic' // Variations of one hue
+            ];
+            
+            const scheme = schemes[Math.floor(Math.random() * schemes.length)];
+            const baseHue = Math.random() * 360; // Random starting hue
+            const saturation = 85 + Math.random() * 15; // 85-100% saturation
+            const lightness = 55 + Math.random() * 25; // 55-80% lightness (brighter)
+            const palette = [];
+            
+            switch(scheme) {
+                case 'analogous':
+                    // 3-4 colors close together on color wheel
+                    for (let i = 0; i < 4; i++) {
+                        const hue = (baseHue + i * 30 + Math.random() * 20 - 10) % 360;
+                        palette.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+                    }
+                    break;
+                    
+                case 'complementary':
+                    // Base color + its complement + variations
+                    palette.push(`hsl(${baseHue}, ${saturation}%, ${lightness}%)`);
+                    palette.push(`hsl(${(baseHue + 180) % 360}, ${saturation}%, ${lightness}%)`);
+                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${lightness + 10}%)`);
+                    palette.push(`hsl(${(baseHue + 210) % 360}, ${saturation}%, ${lightness - 10}%)`);
+                    break;
+                    
+                case 'triadic':
+                    // Three evenly spaced colors
+                    for (let i = 0; i < 3; i++) {
+                        const hue = (baseHue + i * 120) % 360;
+                        palette.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+                    }
+                    palette.push(`hsl(${(baseHue + 60) % 360}, ${saturation}%, ${lightness + 15}%)`);
+                    break;
+                    
+                case 'splitComplementary':
+                    // Base + two colors adjacent to complement
+                    palette.push(`hsl(${baseHue}, ${saturation}%, ${lightness}%)`);
+                    palette.push(`hsl(${(baseHue + 150) % 360}, ${saturation}%, ${lightness}%)`);
+                    palette.push(`hsl(${(baseHue + 210) % 360}, ${saturation}%, ${lightness}%)`);
+                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${lightness + 10}%)`);
+                    break;
+                    
+                case 'monochromatic':
+                    // Variations of one hue
+                    for (let i = 0; i < 4; i++) {
+                        const variation = (i - 1.5) * 15; // Slight hue variation
+                        const lightVar = lightness + variation;
+                        palette.push(`hsl(${(baseHue + variation) % 360}, ${saturation}%, ${Math.max(40, Math.min(80, lightVar))}%)`);
+                    }
+                    break;
+            }
+            
+            // Convert HSL to hex for compatibility
+            return palette.map(hsl => {
+                // Match HSL with decimal values
+                const match = hsl.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+                if (!match) return hsl;
+                const h = parseFloat(match[1]) / 360;
+                const s = parseFloat(match[2]) / 100;
+                const l = parseFloat(match[3]) / 100;
+                
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                let r, g, b;
+                if (s === 0) {
+                    r = g = b = l;
+                } else {
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue2rgb(p, q, h + 1/3);
+                    g = hue2rgb(p, q, h);
+                    b = hue2rgb(p, q, h - 1/3);
+                }
+                
+                const hex = '#' + [r, g, b].map(x => {
+                    const val = Math.round(x * 255).toString(16);
+                    return val.length === 1 ? '0' + val : val;
+                }).join('');
+                
+                return hex;
+            });
+        }
+        
+        let palette = generateRandomPalette(); // Generate random palette on each visit
 
         // Hash function
         function hash(x, y, z) {
