@@ -332,7 +332,7 @@
             const scheme = schemes[Math.floor(Math.random() * schemes.length)];
             const baseHue = Math.random() * 360; // Random starting hue
             const saturation = 85 + Math.random() * 15; // 85-100% saturation
-            const lightness = 55 + Math.random() * 25; // 55-80% lightness (brighter)
+            const lightness = 30 + Math.random() * 25; // 30-55% lightness (avoid white/light colors)
             const palette = [];
             
             switch(scheme) {
@@ -348,8 +348,8 @@
                     // Base color + its complement + variations
                     palette.push(`hsl(${baseHue}, ${saturation}%, ${lightness}%)`);
                     palette.push(`hsl(${(baseHue + 180) % 360}, ${saturation}%, ${lightness}%)`);
-                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${lightness + 10}%)`);
-                    palette.push(`hsl(${(baseHue + 210) % 360}, ${saturation}%, ${lightness - 10}%)`);
+                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${Math.min(55, lightness + 5)}%)`);
+                    palette.push(`hsl(${(baseHue + 210) % 360}, ${saturation}%, ${Math.max(25, lightness - 5)}%)`);
                     break;
                     
                 case 'triadic':
@@ -358,7 +358,7 @@
                         const hue = (baseHue + i * 120) % 360;
                         palette.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
                     }
-                    palette.push(`hsl(${(baseHue + 60) % 360}, ${saturation}%, ${lightness + 15}%)`);
+                    palette.push(`hsl(${(baseHue + 60) % 360}, ${saturation}%, ${Math.min(55, lightness + 5)}%)`);
                     break;
                     
                 case 'splitComplementary':
@@ -366,15 +366,15 @@
                     palette.push(`hsl(${baseHue}, ${saturation}%, ${lightness}%)`);
                     palette.push(`hsl(${(baseHue + 150) % 360}, ${saturation}%, ${lightness}%)`);
                     palette.push(`hsl(${(baseHue + 210) % 360}, ${saturation}%, ${lightness}%)`);
-                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${lightness + 10}%)`);
+                    palette.push(`hsl(${(baseHue + 30) % 360}, ${saturation}%, ${Math.min(55, lightness + 5)}%)`);
                     break;
                     
                 case 'monochromatic':
                     // Variations of one hue
                     for (let i = 0; i < 4; i++) {
-                        const variation = (i - 1.5) * 15; // Slight hue variation
+                        const variation = (i - 1.5) * 10; // Slight lightness variation
                         const lightVar = lightness + variation;
-                        palette.push(`hsl(${(baseHue + variation) % 360}, ${saturation}%, ${Math.max(40, Math.min(80, lightVar))}%)`);
+                        palette.push(`hsl(${(baseHue + variation) % 360}, ${saturation}%, ${Math.max(25, Math.min(55, lightVar))}%)`);
                     }
                     break;
             }
@@ -683,7 +683,7 @@
 
         function drawPixelCell(ctx, x, y, size, value, hue, texX, texY) {
             // Pixelated/metallic style - blocky, retro look
-            const light = 20 + value * 80;
+            const light = Math.min(60, 20 + value * 40); // Cap at 60% to avoid white
             const baseColor = `hsl(${hue}, 90%, ${light}%)`;
             
             ctx.fillStyle = baseColor;
@@ -719,17 +719,17 @@
         }
         
         function drawGlossyCell(ctx, x, y, size, value, hue) {
-            const light = 50 + value * 50;
+            const light = Math.min(60, 30 + value * 30); // Cap at 60% to avoid white
             
             // Glossy sphere effect
             const gradient = ctx.createRadialGradient(
                 x - size * 0.2, y - size * 0.2, 0,
                 x, y, size * 0.6
             );
-            gradient.addColorStop(0, `hsla(${hue}, 100%, 95%, 0.9)`);
-            gradient.addColorStop(0.3, `hsl(${hue}, 100%, ${light + 10}%)`);
+            gradient.addColorStop(0, `hsla(${hue}, 100%, ${Math.min(60, light + 15)}%, 0.9)`);
+            gradient.addColorStop(0.3, `hsl(${hue}, 100%, ${Math.min(60, light + 5)}%)`);
             gradient.addColorStop(0.7, `hsl(${hue}, 100%, ${light}%)`);
-            gradient.addColorStop(1, `hsl(${hue}, 100%, ${Math.max(30, light - 20)}%)`);
+            gradient.addColorStop(1, `hsl(${hue}, 100%, ${Math.max(25, light - 15)}%)`);
             
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -738,7 +738,7 @@
         }
         
         function drawHalftoneCell(ctx, x, y, size, value, hue) {
-            const light = 50 + value * 50;
+            const light = Math.min(60, 30 + value * 30); // Cap at 60% to avoid white
             
             // Halftone: dot size varies with value
             // Darker values = larger dots, lighter values = smaller dots
@@ -786,7 +786,7 @@
                         case 'ascii':
                             const charIndex = Math.floor(value * (chars.length - 1));
                             const ch = chars[charIndex];
-                            const light = 50 + value * 50;
+                            const light = Math.min(60, 30 + value * 30); // Cap at 60% to avoid white
                             ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
                             ctx.fillText(ch, col * cellSize, row * cellSize);
                             break;
