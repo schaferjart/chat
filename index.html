@@ -609,6 +609,59 @@
             return Math.min(1, sum);
         }
 
+        // 9. Autostereogram
+        function autostereogramTexture(x, y, z) {
+            // Generate depth map from noise (this determines the 3D shape)
+            const depthScale = params.param1;
+            const depthOctaves = Math.floor(params.param2);
+            let depth = 0;
+            let amplitude = 1;
+            let frequency = depthScale;
+            
+            for (let i = 0; i < depthOctaves; i++) {
+                depth += amplitude * noise3D(x * frequency, y * frequency, z * frequency);
+                frequency *= params.param3;
+                amplitude *= 0.5;
+            }
+            
+            // Normalize depth to [0, 1] - this represents how "close" the object is
+            depth = (depth + 1) / 2;
+            
+            // Autostereogram pattern width (repetition period in texture space)
+            const patternWidth = params.param4 * 15 + 5; // 5-20 units
+            
+            // Calculate horizontal shift based on depth
+            // Closer objects (higher depth) shift more to the right
+            // The shift creates the 3D parallax effect
+            const maxShift = patternWidth * 0.4; // Max shift is 40% of pattern width
+            const shift = depth * maxShift;
+            
+            // Create the repeating pattern position
+            // The pattern repeats horizontally, shifted by depth
+            const patternX = (x * patternWidth + shift) % patternWidth;
+            const patternY = y * patternWidth;
+            
+            // Generate a random dot/stripe pattern
+            // Use hash function for deterministic randomness
+            const gridX = Math.floor(patternX);
+            const gridY = Math.floor(patternY);
+            const gridZ = Math.floor(z * 10);
+            const patternValue = hash(gridX, gridY, gridZ);
+            
+            // Create fine detail within each pattern cell
+            const fineX = patternX - gridX;
+            const fineY = patternY - gridY;
+            
+            // Create dots or stripes based on pattern
+            const dotPattern = Math.sin(patternValue * Math.PI * 2) > 0 ? 1 : 0;
+            const stripePattern = Math.sin(fineX * Math.PI * 8 + patternValue * Math.PI) > 0 ? 1 : 0;
+            
+            // Combine patterns with depth information
+            // The depth affects both the pattern intensity and the shift
+            const pattern = (dotPattern * 0.5 + stripePattern * 0.5);
+            return pattern * (0.3 + depth * 0.7);
+        }
+
         // Random texture selection
         const textures = [
             { name: 'musgrave', fn: musgraveTexture, labels: ['scale', 'octaves', 'lacunarity', 'gain'] },
@@ -618,7 +671,8 @@
             { name: 'turbulence', fn: turbulenceTexture, labels: ['scale', 'octaves', 'lacunarity', 'intensity'] },
             { name: 'marble', fn: marbleTexture, labels: ['frequency', 'octaves', 'lacunarity', 'turbulence'] },
             { name: 'waves', fn: waveTexture, labels: ['frequency', 'complexity', 'harmonic', 'amplitude'] },
-            { name: 'metaballs', fn: metaballTexture, labels: ['speed', 'count', 'scale', 'radius'] }
+            { name: 'metaballs', fn: metaballTexture, labels: ['speed', 'count', 'scale', 'radius'] },
+            { name: 'autostereogram', fn: autostereogramTexture, labels: ['depth scale', 'octaves', 'lacunarity', 'pattern width'] }
         ];
 
         let selectedTexture = textures[Math.floor(Math.random() * textures.length)];
