@@ -13,7 +13,15 @@
         defaults: '2025-11-30',
         person_profiles: 'identified_only',
     })
-</script>
+    </script>
+    <script>
+    posthog.init('phc_...', {
+        api_host: 'https://hi.baufer.beauty',
+        ui_host: 'https://us.posthog.com',
+        debug: true
+    })
+    posthog.capture('landing_loaded')
+    </script>
     <style>
         * {
             margin: 0;
