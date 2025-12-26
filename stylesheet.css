@@ -1,0 +1,8 @@
+:root {
+    --chat--color--primary: hsl(0, 94%, 49%);
+    --chat--color--primary-shade-50: #db4061;
+    --chat--color--primary--shade-100: #cf3c5c;
+    --chat--color--secondary: #20b69e;
+    --chat--window--width: 400px;
+    /* Add any other overrides */
+}
