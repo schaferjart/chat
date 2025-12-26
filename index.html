@@ -5,35 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>bauferchat</title>
     <link rel="icon" type="image/jpeg" href="baufer-logo.jpg" />
+    
+    <!-- Load CSS BEFORE the script -->
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-    <link href="stylesheet.css" rel="stylesheet" />    
+    <link href="stylesheet.css" rel="stylesheet" />
+    
     <script type="module">
         import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
         createChat({
             webhookUrl: 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat',
-            webhookConfig: {
-                method: 'POST',
-                headers: {}
-            },
             target: '#n8n-chat',
             mode: 'fullscreen',
-            chatInputKey: 'chatInput',
-            chatSessionKey: 'sessionId',
-            loadPreviousSession: true,
-            metadata: {},
-            showWelcomeScreen: false,
-            defaultLanguage: 'en',
+            	i18n: { en: {
+                    title: "Hallo Jan",
+                    subtitle: "Meryy Crisis",
+                    footer: "",
+                    getStarted: "New Conversation",
+                    inputPlaceholder: "Type your question..",
+                    closeButtonTooltip: "Close chat"
+                }}, 
             initialMessages: [
                 'Hi there! 👋',
                 'What a beautiful day to chat with you! ☀️',
                 'Feel free to ask me anything! 💬'
-            ],
-            enableStreaming: false,
+            ]
         });
     </script>
 </head>
 <body>
-    <h1     style="text-align: center;">Welcome to baufer Chat</h1>
+    <div id="n8n-chat"></div>
 </body>
-</html> 
+</html>
