@@ -1,3 +1,17 @@
-frontend improvement to n8n.io/chat
+
+frontend improvement to https://www.npmjs.com/package/@n8n/chat
+
+inspired by https://github.com/juliangarnier
+
 visit at https://chat.baufer.beauty/
-inspired by @https://github.com/juliangarnier
+
+---
+
+# Implementation
+general setup : github app over on coolify
+index.html : adjust body to your liking
+chat.js : use your own webhook
+
+# Roadmap
+- [ ] Send Files
+- [ ] Voice Support
