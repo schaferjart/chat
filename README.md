@@ -1,1 +1,1 @@
-visit at https://hello.baufer.beauty/
+visit at https://chat.baufer.beauty/
