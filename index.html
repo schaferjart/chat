@@ -1,37 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bauferchat</title>
-    <link rel="icon" type="image/jpeg" href="baufer-logo.jpg" />
-    
-    <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-    <link href="stylesheet.css" rel="stylesheet" />
-
-    <script type="module">
-        import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
-        createChat({
-            webhookUrl: 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat',
-            target: '#n8n-chat',
-            mode: 'fullscreen',
-            	i18n: { en: {
-                    title: "Hallo Jan",
-                    subtitle: "Merry Crisis",
-                    footer: "",
-                    getStarted: "New Conversation",
-                    inputPlaceholder: "Type your question..",
-                    closeButtonTooltip: "Close chat"
-                }}, 
-            initialMessages: [
-                'What a beautiful day to chat with you! ☀️',
-                'Feel free to ask me anything! 💬'
-            ]
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>baufer chat</title>
+  <link rel="icon" type="image/jpeg" href="baufer-logo.jpg">
+  <style>
+    :root {
+      font-size: 1.125rem;
+      --bg0: #FFF;
+      --bg1: rgba(206,206,206,.5);
+      --bg2: #e74266;
+      --fg0: #000;
+      --fg1: rgba(0,0,0,.5);
+      --a0: #0076FF;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg0: #0a0a0a;
+        --bg1: rgba(206,206,206,.125);
+        --bg2: #e74266;
+        --fg0: #FFF;
+        --fg1: rgba(206,206,206,.5);
+      }
+    }
+    @media (min-width: 600px) { :root { font-size: 1.25rem; } }
+    @media (min-width: 900px) { :root { font-size: 1.5rem; } }
+    *, *:before, *:after { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      background: var(--bg0);
+      color: var(--fg0);
+      min-height: 100dvh;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      padding-bottom: 5rem;
+    }
+    .message-row {
+      display: flex;
+      margin-bottom: .25rem;
+    }
+    .message-row.right {
+      justify-content: flex-end;
+    }
+    .bubble {
+      overflow: hidden;
+      display: inline-block;
+      margin: 0 0 .125rem 0;
+      padding: .5rem .85rem;
+      line-height: 1.25rem;
+      border-radius: 1.25rem;
+      transform-origin: 0 100%;
+      vertical-align: middle;
+      max-width: 85%;
+    }
+    .bubble.left {
+      background: var(--bg1);
+      border-bottom-left-radius: 0;
+    }
+    .bubble.right {
+      background: var(--bg2);
+      color: #fff;
+      border-bottom-right-radius: 0;
+      transform-origin: 100% 100%;
+    }
+    .bubble span.message { display: inline; line-height: 1.3; }
+    .bubble .loading {
+      white-space: pre;
+      font-size: 1.5rem;
+      line-height: 1rem;
+    }
+    .bubble .loading b {
+      display: inline-block;
+      color: var(--fg1);
+      animation: pulse .6s infinite alternate;
+    }
+    .bubble .loading b:nth-child(2) { animation-delay: .1s; }
+    .bubble .loading b:nth-child(3) { animation-delay: .2s; }
+    @keyframes pulse { to { opacity: .3; transform: scale(.8); } }
+    .input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      background: var(--bg0);
+      border-top: 1px solid var(--bg1);
+      display: flex;
+      gap: .5rem;
+    }
+    .input-area input {
+      flex: 1;
+      padding: .6rem 1rem;
+      border: 1px solid var(--bg1);
+      border-radius: 1.5rem;
+      font-size: 1rem;
+      background: var(--bg0);
+      color: var(--fg0);
+      outline: none;
+    }
+    .input-area input:focus { border-color: var(--bg2); }
+    .input-area button {
+      padding: .6rem 1.2rem;
+      border: none;
+      border-radius: 1.5rem;
+      background: var(--bg2);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .input-area button:disabled { opacity: .5; cursor: not-allowed; }
+  </style>
 </head>
 <body>
-    <div id="n8n-chat"></div>
+  <div class="messages"></div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <script src="juliangarnier.com-gh-pages/js/anime.js"></script>
+  <script>
+    const WEBHOOK_URL = 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat';
+    const messagesEl = document.querySelector('.messages');
+    const inputEl = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let sessionId = localStorage.getItem('chatSessionId') || crypto.randomUUID();
+    localStorage.setItem('chatSessionId', sessionId);
+
+    // Create bubble element
+    function createBubble(text, position) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${position}`;
+      const msg = document.createElement('span');
+      msg.className = 'message';
+      msg.innerHTML = text;
+      bubble.appendChild(msg);
+      return bubble;
+    }
+
+    // Create loading bubble
+    function createLoadingBubble() {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble left';
+      const loading = document.createElement('span');
+      loading.className = 'loading';
+      loading.innerHTML = '<b>•</b><b>•</b><b>•</b>';
+      bubble.appendChild(loading);
+      return bubble;
+    }
+
+    // Add message with animation
+    function addMessage(text, position) {
+      const row = document.createElement('div');
+      row.className = `message-row ${position}`;
+      const bubble = createBubble(text, position);
+      bubble.style.opacity = '0';
+      bubble.style.transform = 'scale(0.8)';
+      row.appendChild(bubble);
+      messagesEl.appendChild(row);
+      
+      anime({
+        targets: bubble,
+        opacity: [0, 1],
+        scale: [0.8, 1],
+        duration: 400,
+        easing: 'easeOutBack'
+      });
+      
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return bubble;
+    }
+
+    // Send message to webhook
+    async function sendToWebhook(message) {
+      const row = document.createElement('div');
+      row.className = 'message-row left';
+      const loadingBubble = createLoadingBubble();
+      row.appendChild(loadingBubble);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'sendMessage',
+            sessionId: sessionId,
+            chatInput: message
+          })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading row
+        row.remove();
+        
+        // Add bot response
+        const botMessage = data.output || data.text || data.message || 'Sorry, I couldn\'t process that.';
+        addMessage(botMessage, 'left');
+        
+      } catch (error) {
+        row.remove();
+        addMessage('Connection error. Please try again.', 'left');
+      }
+    }
+
+    // Handle send
+    function handleSend() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      
+      inputEl.value = '';
+      addMessage(text, 'right');
+      sendToWebhook(text);
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+
+    // Initial greeting
+    setTimeout(() => addMessage('Hey there! 👋', 'left'), 300);
+    setTimeout(() => addMessage('How can I help you today?', 'left'), 1000);
+  </script>
 </body>
 </html>
