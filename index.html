@@ -3,18 +3,35 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>baufer</title>
+    <title>bauferchat</title>
     <link rel="icon" type="image/jpeg" href="baufer-logo.jpg" />
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
     <script type="module">
         import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
         createChat({
-            webhookUrl: 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat'
+            webhookUrl: 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat',
+            webhookConfig: {
+                method: 'POST',
+                headers: {}
+            },
+            target: '#n8n-chat',
+            mode: 'fullscreen',
+            chatInputKey: 'chatInput',
+            chatSessionKey: 'sessionId',
+            loadPreviousSession: true,
+            metadata: {},
+            showWelcomeScreen: false,
+            defaultLanguage: 'en',
+            initialMessages: [
+                'Hi there! 👋',
+                'My name is bAufererererere. How can I assist you today?'
+            ],
+            enableStreaming: false,
         });
     </script>
 </head>
 <body>
-    <h1>Welcome to baufer Chat</h1>
+    <h1     style="text-align: center;">Welcome to baufer Chat</h1>
 </body>
 </html> 
