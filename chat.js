@@ -34,8 +34,8 @@ function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// Add message with animation
-function addMessage(text, position) {
+// Add message with animation (scroll is optional)
+function addMessage(text, position, shouldScroll = false) {
   const row = document.createElement('div');
   row.className = `message-row ${position}`;
   const bubble = createBubble(text, position);
@@ -52,7 +52,9 @@ function addMessage(text, position) {
     easing: 'easeOutBack'
   });
   
-  scrollToBottom();
+  if (shouldScroll) {
+    scrollToBottom();
+  }
   return bubble;
 }
 
@@ -105,6 +107,7 @@ function splitIntoChunks(text) {
 }
 
 // Add multiple messages with staggered delays and typing indicator
+// Only scroll on first message, then let user control
 async function addMessagesSequentially(chunks, position) {
   for (let i = 0; i < chunks.length; i++) {
     // Show typing indicator before each message (except first, which had the initial loading)
@@ -115,10 +118,6 @@ async function addMessagesSequentially(chunks, position) {
       typingRow.appendChild(typingBubble);
       messagesEl.appendChild(typingRow);
       
-      // Small delay then scroll to ensure DOM updated
-      await new Promise(r => setTimeout(r, 50));
-      scrollToBottom();
-      
       // Delay proportional to upcoming message length (no cap)
       const delay = chunks[i].length * 20 + 300;
       await new Promise(r => setTimeout(r, delay));
@@ -126,11 +125,10 @@ async function addMessagesSequentially(chunks, position) {
       // Remove typing indicator
       typingRow.remove();
     }
-    addMessage(chunks[i], position);
     
-    // Ensure scroll after each message
-    await new Promise(r => setTimeout(r, 50));
-    scrollToBottom();
+    // Only scroll on the first message
+    const shouldScroll = (i === 0);
+    addMessage(chunks[i], position, shouldScroll);
   }
 }
 
@@ -166,7 +164,7 @@ async function sendToWebhook(message) {
     
   } catch (error) {
     row.remove();
-    addMessage('Connection error. Please try again.', 'left');
+    addMessage('Connection error. Please try again.', 'left', true);
   }
 }
 
@@ -176,7 +174,7 @@ function handleSend() {
   if (!text) return;
   
   inputEl.value = '';
-  addMessage(text, 'right');
+  addMessage(text, 'right', true);  // Scroll for user's message
   sendToWebhook(text);
 }
 
@@ -186,6 +184,6 @@ inputEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') handleSend();
 });
 
-// Initial greeting
-setTimeout(() => addMessage('Hey there! 👋', 'left'), 300);
-setTimeout(() => addMessage('How can I help you today?', 'left'), 1000);
+// Initial greeting (scroll for these since it's the start)
+setTimeout(() => addMessage('Hey there! 👋', 'left', true), 300);
+setTimeout(() => addMessage('How can I help you today?', 'left', true), 1000);
