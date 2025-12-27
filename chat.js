@@ -29,6 +29,17 @@ function createLoadingBubble() {
   return bubble;
 }
 
+// Scroll to bottom helper - force scroll to absolute bottom
+function scrollToBottom() {
+  // Use both methods for reliability
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  // Also scroll the last element into view
+  const lastRow = messagesEl.lastElementChild;
+  if (lastRow) {
+    lastRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+}
+
 // Add message with animation
 function addMessage(text, position) {
   const row = document.createElement('div');
@@ -47,8 +58,86 @@ function addMessage(text, position) {
     easing: 'easeOutBack'
   });
   
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  scrollToBottom();
   return bubble;
+}
+
+// Split text into chat-friendly chunks
+function splitIntoChunks(text) {
+  // Max characters per bubble
+  const MAX_LENGTH = 200;
+  
+  // First try splitting by double newlines (paragraphs)
+  let chunks = text.split(/\n\n+/).map(s => s.trim()).filter(s => s);
+  
+  // If only one chunk, try other split strategies
+  if (chunks.length === 1) {
+    // Try splitting by numbered lists (1., 2., etc.) or markdown headers (**Title:**)
+    const listSplit = text.split(/(?=\d+\.\s+\*\*|\n\d+\.\s|\n[-•]\s)/);
+    if (listSplit.length > 1) {
+      chunks = listSplit.map(s => s.trim()).filter(s => s);
+    } else {
+      // Split by sentence endings
+      chunks = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+      chunks = chunks.map(s => s.trim()).filter(s => s);
+    }
+  }
+  
+  // Merge very short chunks, split very long ones
+  const result = [];
+  for (const chunk of chunks) {
+    if (result.length > 0 && chunk.length < 30) {
+      // Merge short chunk with previous
+      result[result.length - 1] += ' ' + chunk;
+    } else if (chunk.length > MAX_LENGTH) {
+      // Split long chunk by sentences
+      const sentences = chunk.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [chunk];
+      let current = '';
+      for (const sentence of sentences) {
+        if (current.length + sentence.length > MAX_LENGTH && current.length > 0) {
+          result.push(current.trim());
+          current = sentence;
+        } else {
+          current += (current ? ' ' : '') + sentence.trim();
+        }
+      }
+      if (current.trim()) result.push(current.trim());
+    } else {
+      result.push(chunk);
+    }
+  }
+  
+  return result.length > 0 ? result : [text];
+}
+
+// Add multiple messages with staggered delays and typing indicator
+async function addMessagesSequentially(chunks, position) {
+  for (let i = 0; i < chunks.length; i++) {
+    // Show typing indicator before each message (except first, which had the initial loading)
+    if (i > 0) {
+      const typingRow = document.createElement('div');
+      typingRow.className = 'message-row left';
+      const typingBubble = createLoadingBubble();
+      typingRow.appendChild(typingBubble);
+      messagesEl.appendChild(typingRow);
+      
+      // Small delay then scroll to ensure DOM updated
+      await new Promise(r => setTimeout(r, 50));
+      scrollToBottom();
+      
+      // Delay proportional to upcoming message length (no cap)
+      const delay = chunks[i].length * 20 + 300;
+      await new Promise(r => setTimeout(r, delay));
+      
+      // Remove typing indicator
+      typingRow.remove();
+    }
+    addMessage(chunks[i], position);
+    
+    // Ensure scroll after each message
+    await new Promise(r => setTimeout(r, 50));
+    scrollToBottom();
+  }
 }
 
 // Send message to webhook
@@ -58,7 +147,7 @@ async function sendToWebhook(message) {
   const loadingBubble = createLoadingBubble();
   row.appendChild(loadingBubble);
   messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  scrollToBottom();
 
   try {
     const response = await fetch(WEBHOOK_URL, {
@@ -76,9 +165,10 @@ async function sendToWebhook(message) {
     // Remove loading row
     row.remove();
     
-    // Add bot response
+    // Add bot response - split into chunks for natural feel
     const botMessage = data.output || data.text || data.message || 'Sorry, I couldn\'t process that.';
-    addMessage(botMessage, 'left');
+    const chunks = splitIntoChunks(botMessage);
+    await addMessagesSequentially(chunks, 'left');
     
   } catch (error) {
     row.remove();

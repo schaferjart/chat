@@ -42,8 +42,10 @@ body {
 .messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem;
-  padding-bottom: 5rem;
+  padding-bottom: 6rem;
+  scroll-behavior: smooth;
 }
 
 .message-row {
