@@ -16,5 +16,4 @@ chat.js : use your own webhook
 Deepen function implementation for chatnode
 - [ ] Send Files
 - [ ] Voice Support
-- [ ] The rest
-Use with React Native and Expo Go
+- [ ] Convert to React Native and try within Expo Go
