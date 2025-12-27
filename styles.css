@@ -30,13 +30,17 @@
 body, html {
   background: var(--bg0);
   color: var(--fg0);
-  min-height: 100dvh;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   display: flex;
   flex-direction: column;
   font-family: system-ui, -apple-system, sans-serif;
+  height: 100%;
+  position: relative;
 }
 
 .messages {
@@ -44,8 +48,20 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1rem;
-  padding-bottom: 6rem;
-  scroll-behavior: smooth;
+  padding-bottom: 1rem;
+}
+
+.input-area {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: var(--bg0);
+  border-top: 1px solid var(--bg1);
+  display: flex;
+  gap: .5rem;
+  flex-shrink: 0;
 }
 
 .message-row {
@@ -106,18 +122,6 @@ body {
     opacity: .3;
     transform: scale(.8);
   }
-}
-
-.input-area {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem;
-  background: var(--bg0);
-  border-top: 1px solid var(--bg1);
-  display: flex;
-  gap: .5rem;
 }
 
 .input-area input {

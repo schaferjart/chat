@@ -29,15 +29,9 @@ function createLoadingBubble() {
   return bubble;
 }
 
-// Scroll to bottom helper - force scroll to absolute bottom
+// Scroll to bottom helper - simple and reliable
 function scrollToBottom() {
-  // Use both methods for reliability
   messagesEl.scrollTop = messagesEl.scrollHeight;
-  // Also scroll the last element into view
-  const lastRow = messagesEl.lastElementChild;
-  if (lastRow) {
-    lastRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }
 }
 
 // Add message with animation
