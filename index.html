@@ -3,18 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>baufer chat</title>
+  <title>n8n-chat-pretty Demo</title>
   <link rel="icon" type="image/jpeg" href="baufer-logo.jpg">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #n8n-chat {
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
-  <div class="messages"></div>
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
-    <button id="sendBtn">Send</button>
-  </div>
+  <div id="n8n-chat"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-  <script src="chat.js"></script>
+  <!-- For development: use local source -->
+  <script type="module">
+    import { createChat } from './src/index.ts';
+
+    createChat({
+      webhookUrl: 'https://n8n.baufer.beauty/webhook/53c136fe-3e77-4709-a143-fe82746dd8b6/chat',
+      initialMessages: [
+        'Hey there! 👋',
+        'How can I help you today?'
+      ],
+      theme: {
+        primaryColor: '#e74266'
+      }
+    });
+  </script>
 </body>
 </html>
